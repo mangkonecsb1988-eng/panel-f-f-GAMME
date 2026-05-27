@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FREE FIRE PANEL</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Arial', sans-serif; }
+        
+        /* พื้นหลัง แดง-ฟ้า แนวเกมฟีฟาย */
+        body {
+            background: linear-gradient(135deg, #ff1f44 0%, #00d2ff 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* กล่องพาเนลหลัก */
+        .panel-box {
+            background: rgba(15, 15, 25, 0.95);
+            border: 2px solid #00d2ff;
+            box-shadow: 0 0 20px rgba(255, 31, 68, 0.6);
+            border-radius: 15px;
+            width: 350px;
+            padding: 25px;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+
+        h2 { font-size: 24px; margin-bottom: 20px; text-shadow: 0 0 10px #ff1f44; }
+        .hidden { display: none !important; }
+
+        /* หน้า Login */
+        .input-group { margin-bottom: 15px; text-align: left; }
+        .input-group label { display: block; font-size: 12px; margin-bottom: 5px; color: #00d2ff; }
+        .input-group input {
+            width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #333;
+            background: #222; color: white; font-size: 16px;
+        }
+        .btn {
+            width: 100%; padding: 12px; background: linear-gradient(90deg, #ff1f44, #00d2ff);
+            border: none; border-radius: 8px; color: white; font-size: 16px; font-weight: bold;
+            cursor: pointer; margin-top: 10px; transition: 0.2s;
+        }
+        .btn:hover { transform: scale(1.02); }
+
+        /* หน้าเมนู */
+        .menu-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #1a1a2e; padding: 12px; margin-bottom: 10px;
+            border-radius: 8px; border-left: 4px solid #00d2ff;
+        }
+        .menu-item.active { border-left-color: #ff1f44; }
+
+        /* สวิตช์ เปิด-ปิด */
+        .switch {
+            position: relative; display: inline-block; width: 45px; height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #333; transition: .3s; border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 16px; width: 16px;
+            left: 4px; bottom: 4px; background-color: white; transition: .3s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #ff1f44; box-shadow: 0 0 8px #ff1f44; }
+        input:checked + .slider:before { transform: translateX(21px); }
+        
+        .status { font-size: 11px; margin-top: 15px; color: #888; }
+    </style>
+</head>
+<body>
+
+    <!-- พาเนลอยู่ตรงกลางจอ -->
+    <div class="panel-box" id="panel">
+        
+        <!-- 1. หน้า LOGIN -->
+        <div id="login-section">
+            <h2>FF PANEL LOGIN 👑</h2>
+            <div class="input-group">
+                <label>USER</label>
+                <input type="text" id="username" placeholder="ใส่ชื่อผู้ใช้">
+            </div>
+            <div class="input-group">
+                <label>PASSWORD</label>
+                <input type="password" id="password" placeholder="ใส่รหัสผ่าน">
+            </div>
+            <button class="btn" onclick="checkLogin()">เข้าสู่ระบบ</button>
+        </div>
+
+        <!-- 2. หน้า MENU (ซ่อนไว้ก่อนログイン) -->
+        <div id="menu-section" class="hidden">
+            <h2>👑 KING MENU V1</h2>
+            
+            <div class="menu-item">
+                <span>ช่วยเล็งหัว 75% 💀</span>
+                <label class="switch"><input type="checkbox" onchange="toggleHack(this, 'เล็งหัว 75%')"><span class="slider"></span></label>
+            </div>
+            <div class="menu-item">
+                <span>ช่วยลดการกระตุก 📲</span>
+                <label class="switch"><input type="checkbox" onchange="toggleHack(this, 'ลดกระตุก')"><span class="slider"></span></label>
+            </div>
+            <div class="menu-item">
+                <span>หมุนจอไว 🖥️</span>
+                <label class="switch"><input type="checkbox" onchange="toggleHack(this, 'หมุนจอไว')"><span class="slider"></span></label>
+            </div>
+            <div class="menu-item">
+                <span>กันดำ 🛡️</span>
+                <label class="switch"><input type="checkbox" onchange="toggleHack(this, 'กันดำ')"><span class="slider"></span></label>
+            </div>
+            <div class="menu-item">
+                <span>กันแบน 🔒</span>
+                <label class="switch"><input type="checkbox" onchange="toggleHack(this, 'กันแบน')"><span class="slider"></span></label>
+            </div>
+
+            <button class="btn" style="background: #333;" onclick="logout()">ออกจากระบบ</button>
+            <div class="status" id="log-status">ระบบพร้อมใช้งาน</div>
+        </div>
+    </div>
+
+    <!-- โค้ดสร้างเสียงบี๊บ (Audio Context) ไม่ต้องใช้ไฟล์เสียงจากภายนอก -->
+    <script>
+        // ฟังก์ชันสร้างเสียงกด เปิด-ปิด
+        function playSound(type) {
+            const context = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = context.createOscillator();
+            const gain = context.createGain();
+            
+            osc.connect(gain);
+            gain.connect(context.destination);
+            
+            if(type === 'on') {
+                osc.frequency.setValueAtTime(600, context.currentTime); // เสียงสูงตอนเปิด
+                gain.gain.setValueAtTime(0.1, context.currentTime);
+                osc.start();
+                gain.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.1);
+                osc.stop(context.currentTime + 0.1);
+            } else {
+                osc.frequency.setValueAtTime(300, context.currentTime); // เสียงต่ำตอนปิด
+                gain.gain.setValueAtTime(0.1, context.currentTime);
+                osc.start();
+                gain.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.1);
+                osc.stop(context.currentTime + 0.1);
+            }
+        }
+
+        // เช็คระบบ Login
+        function checkLogin() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+
+            if(user === "King" && pass === "GAMME123") {
+                alert("เข้าสู่ระบบสำเร็จ! 🚀");
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('menu-section').classList.remove('hidden');
+                playSound('on');
+            } else {
+                alert("รหัสผิดนะมึง ลองใหม่!❌");
+            }
+        }
+
+        // ฟังก์ชัน เปิด-ปิด เมนูแล้วมีเสียง + เปลี่ยนสถานะ
+        function toggleHack(checkbox, name) {
+            const logStatus = document.getElementById('log-status');
+            const item = checkbox.closest('.menu-item');
+            
+            if(checkbox.checked) {
+                item.classList.add('active');
+                logStatus.innerText = `เปิดใช้งาน: ${name} ✅`;
+                logStatus.style.color = "#00d2ff";
+                playSound('on'); // เปิด = เสียงติ๊ดสูง
+            } else {
+                item.classList.remove('active');
+                logStatus.innerText = `ปิดใช้งาน: ${name} ❌`;
+                logStatus.style.color = "#ff1f44";
+                playSound('off'); // ปิด = เสียงตุ๊บต่ำ
+            }
+        }
+
+        // ออกจากระบบ
+        function logout() {
+            document.getElementById('login-section').classList.remove('hidden');
+            document.getElementById('menu-section').classList.add('hidden');
+            document.getElementById('username').value = "";
+            document.getElementById('password').value = "";
+            playSound('off');
+        }
+    </script>
+</body>
+                                        </html>
